@@ -1,0 +1,1178 @@
+{
+	"info": {
+		"_postman_id": "product-catalog-api",
+		"name": "Product Catalog API - Functional Tests",
+		"description": "Comprehensive functional testing collection for the Product Catalog REST API. This collection tests all CRUD operations, validation scenarios, search functionality, and business logic workflows.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "product-catalog-team"
+	},
+	"item": [
+		{
+			"name": "1. Health Check & Setup",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has correct structure\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"    pm.expect(responseJson).to.have.property('data');",
+									"    pm.expect(responseJson.data).to.have.property('status', 'healthy');",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 200ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if the API server is running and healthy"
+					},
+					"response": []
+				}
+			],
+			"description": "Initial setup and health verification tests"
+		},
+		{
+			"name": "2. Product Creation Tests",
+			"item": [
+				{
+					"name": "Create Valid Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Product created successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.equal('Product created successfully');",
+									"    pm.expect(responseJson.data).to.have.property('id', 'TEST-001');",
+									"    pm.expect(responseJson.data).to.have.property('name', 'Test Product');",
+									"    pm.expect(responseJson.data).to.have.property('price', 99.99);",
+									"});",
+									"",
+									"pm.test(\"Timestamps are present\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.have.property('created_at');",
+									"    pm.expect(responseJson.data).to.have.property('updated_at');",
+									"});",
+									"",
+									"// Store product ID for later tests",
+									"pm.globals.set('test_product_id', 'TEST-001');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"TEST-001\",\n    \"name\": \"Test Product\",\n    \"description\": \"A product for testing purposes\",\n    \"category\": \"Testing\",\n    \"price\": 99.99\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Create a valid product with all required fields"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product - Empty ID (Validation Error)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Validation error for empty ID\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('validation_error');",
+									"    pm.expect(responseJson.message).to.include('product ID cannot be empty');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"\",\n    \"name\": \"Invalid Product\",\n    \"description\": \"Product with empty ID\",\n    \"category\": \"Testing\",\n    \"price\": 50.0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Test validation - product with empty ID should fail"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product - Negative Price (Validation Error)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Validation error for negative price\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('validation_error');",
+									"    pm.expect(responseJson.message).to.include('product price cannot be negative');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"INVALID-002\",\n    \"name\": \"Invalid Product\",\n    \"description\": \"Product with negative price\",\n    \"category\": \"Testing\",\n    \"price\": -25.50\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Test validation - product with negative price should fail"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Free Product (Price = 0)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Free product created successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.price).to.equal(0);",
+									"    pm.expect(responseJson.data.id).to.equal('FREE-001');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"FREE-001\",\n    \"name\": \"Free Sample\",\n    \"description\": \"Free product sample\",\n    \"category\": \"Samples\",\n    \"price\": 0.0\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Test creating a free product (price = 0)"
+					},
+					"response": []
+				}
+			],
+			"description": "Test product creation scenarios including validation"
+		},
+		{
+			"name": "3. Product Retrieval Tests",
+			"item": [
+				{
+					"name": "Get Product by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product retrieved successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.id).to.equal(pm.globals.get('test_product_id'));",
+									"    pm.expect(responseJson.data.name).to.equal('Test Product');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{test_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_product_id}}"
+							]
+						},
+						"description": "Retrieve a specific product by its ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-existent Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Not found error\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('not_found');",
+									"    pm.expect(responseJson.message).to.equal('Product not found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/NON-EXISTENT",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"NON-EXISTENT"
+							]
+						},
+						"description": "Test retrieving a product that doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Products list returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    pm.expect(responseJson.data.length).to.be.greaterThan(0);",
+									"});",
+									"",
+									"pm.test(\"Products have required fields\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const product = responseJson.data[0];",
+									"    pm.expect(product).to.have.property('id');",
+									"    pm.expect(product).to.have.property('name');",
+									"    pm.expect(product).to.have.property('price');",
+									"    pm.expect(product).to.have.property('category');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Retrieve all products in the system"
+					},
+					"response": []
+				}
+			],
+			"description": "Test product retrieval operations"
+		},
+		{
+			"name": "4. Product Update Tests",
+			"item": [
+				{
+					"name": "Update Product Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product updated successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.equal('Product updated successfully');",
+									"    pm.expect(responseJson.data.name).to.equal('Updated Test Product');",
+									"    pm.expect(responseJson.data.price).to.equal(149.99);",
+									"});",
+									"",
+									"pm.test(\"Updated timestamp changed\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.updated_at).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Test Product\",\n    \"description\": \"An updated product for testing\",\n    \"category\": \"Updated Testing\",\n    \"price\": 149.99\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/{{test_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_product_id}}"
+							]
+						},
+						"description": "Update an existing product with valid data"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Non-existent Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Not found error\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('not_found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Name\",\n    \"description\": \"Updated Description\",\n    \"category\": \"Updated Category\",\n    \"price\": 199.99\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/NON-EXISTENT",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"NON-EXISTENT"
+							]
+						},
+						"description": "Try to update a product that doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product with Invalid Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Validation error for empty name\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('validation_error');",
+									"    pm.expect(responseJson.message).to.include('product name cannot be empty');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"\",\n    \"description\": \"Valid description\",\n    \"category\": \"Valid Category\",\n    \"price\": 99.99\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/{{test_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_product_id}}"
+							]
+						},
+						"description": "Try to update a product with invalid data (empty name)"
+					},
+					"response": []
+				}
+			],
+			"description": "Test product update operations and validation"
+		},
+		{
+			"name": "5. Search & Filter Tests",
+			"item": [
+				{
+					"name": "Search Products by Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Electronics products returned\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    if (responseJson.data.length > 0) {",
+									"        responseJson.data.forEach(product => {",
+									"            pm.expect(product.category).to.equal('Electronics');",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/search?category=Electronics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"search"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "Electronics"
+								}
+							]
+						},
+						"description": "Search for products in Electronics category"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Products by Price Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Products within price range\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    responseJson.data.forEach(product => {",
+									"        pm.expect(product.price).to.be.at.least(50);",
+									"        pm.expect(product.price).to.be.at.most(500);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/search?min_price=50&max_price=500",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"search"
+							],
+							"query": [
+								{
+									"key": "min_price",
+									"value": "50"
+								},
+								{
+									"key": "max_price",
+									"value": "500"
+								}
+							]
+						},
+						"description": "Search for products within a specific price range"
+					},
+					"response": []
+				},
+				{
+					"name": "Search with Multiple Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Filtered results match criteria\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data).to.be.an('array');",
+									"    responseJson.data.forEach(product => {",
+									"        pm.expect(product.category).to.equal('Electronics');",
+									"        pm.expect(product.price).to.be.at.least(100);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/search?category=Electronics&min_price=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"search"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "Electronics"
+								},
+								{
+									"key": "min_price",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Search with multiple filters (category and minimum price)"
+					},
+					"response": []
+				},
+				{
+					"name": "Search with Invalid Price Parameter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Invalid parameter error\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('invalid_parameter');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/search?min_price=invalid",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"search"
+							],
+							"query": [
+								{
+									"key": "min_price",
+									"value": "invalid"
+								}
+							]
+						},
+						"description": "Test search with invalid price parameter"
+					},
+					"response": []
+				}
+			],
+			"description": "Test search and filtering functionality"
+		},
+		{
+			"name": "6. Product Cloning Tests",
+			"item": [
+				{
+					"name": "Clone Existing Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Product cloned successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.equal('Product cloned successfully');",
+									"    pm.expect(responseJson.data.id).to.include('TEST-001-clone');",
+									"    pm.expect(responseJson.data.name).to.equal('Updated Test Product');",
+									"});",
+									"",
+									"pm.test(\"Clone has different ID but same data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.id).to.not.equal('TEST-001');",
+									"    pm.expect(responseJson.data.name).to.equal('Updated Test Product');",
+									"    pm.expect(responseJson.data.price).to.equal(149.99);",
+									"});",
+									"",
+									"// Store clone ID for cleanup",
+									"pm.globals.set('clone_product_id', responseJson.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{test_product_id}}/clone",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{test_product_id}}",
+								"clone"
+							]
+						},
+						"description": "Clone an existing product"
+					},
+					"response": []
+				},
+				{
+					"name": "Clone Non-existent Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Not found error\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('not_found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/NON-EXISTENT/clone",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"NON-EXISTENT",
+								"clone"
+							]
+						},
+						"description": "Try to clone a product that doesn't exist"
+					},
+					"response": []
+				}
+			],
+			"description": "Test product cloning functionality"
+		},
+		{
+			"name": "7. Business Logic Workflows",
+			"item": [
+				{
+					"name": "Create Premium Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Premium product created\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.price).to.be.greaterThan(1000);",
+									"    pm.expect(responseJson.data.category).to.equal('Premium');",
+									"});",
+									"",
+									"pm.globals.set('premium_product_id', 'PREMIUM-001');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"PREMIUM-001\",\n    \"name\": \"Luxury Watch\",\n    \"description\": \"High-end luxury timepiece\",\n    \"category\": \"Premium\",\n    \"price\": 5999.99\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Create a premium product for business logic testing"
+					},
+					"response": []
+				},
+				{
+					"name": "Apply Bulk Discount Workflow",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Get the premium product first to calculate discount",
+									"pm.sendRequest({",
+									"    url: pm.globals.get('base_url') + '/products/' + pm.globals.get('premium_product_id'),",
+									"    method: 'GET'",
+									"}, function (err, response) {",
+									"    if (!err && response.code === 200) {",
+									"        const product = response.json().data;",
+									"        const discountedPrice = product.price * 0.85; // 15% discount",
+									"        pm.globals.set('discounted_price', discountedPrice);",
+									"        pm.globals.set('original_price', product.price);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Discount applied correctly\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const expectedPrice = parseFloat(pm.globals.get('discounted_price'));",
+									"    pm.expect(responseJson.data.price).to.equal(expectedPrice);",
+									"});",
+									"",
+									"pm.test(\"Price decreased from original\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const originalPrice = parseFloat(pm.globals.get('original_price'));",
+									"    pm.expect(responseJson.data.price).to.be.lessThan(originalPrice);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Luxury Watch\",\n    \"description\": \"High-end luxury timepiece (15% OFF!)\",\n    \"category\": \"Premium\",\n    \"price\": {{discounted_price}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/{{premium_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{premium_product_id}}"
+							]
+						},
+						"description": "Apply a bulk discount to premium product (15% off)"
+					},
+					"response": []
+				},
+				{
+					"name": "Inventory Summary Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Multiple products in inventory\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.data.length).to.be.greaterThan(5);",
+									"});",
+									"",
+									"pm.test(\"Calculate inventory value\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    let totalValue = 0;",
+									"    let productCount = responseJson.data.length;",
+									"    ",
+									"    responseJson.data.forEach(product => {",
+									"        totalValue += product.price;",
+									"    });",
+									"    ",
+									"    pm.expect(totalValue).to.be.greaterThan(0);",
+									"    console.log(`Inventory Summary: ${productCount} products, Total Value: $${totalValue.toFixed(2)}`);",
+									"    ",
+									"    // Store inventory metrics",
+									"    pm.globals.set('inventory_count', productCount);",
+									"    pm.globals.set('inventory_value', totalValue);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "Generate inventory summary report"
+					},
+					"response": []
+				}
+			],
+			"description": "Test complete business workflows and scenarios"
+		},
+		{
+			"name": "8. Cleanup & Deletion Tests",
+			"item": [
+				{
+					"name": "Delete Product Successfully",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Product deleted successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.equal('Product deleted successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{clone_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{clone_product_id}}"
+							]
+						},
+						"description": "Delete the cloned product to clean up"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Product Deleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Product not found after deletion\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('not_found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{clone_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{clone_product_id}}"
+							]
+						},
+						"description": "Verify the product was actually deleted"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Non-existent Product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Not found error\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.error).to.equal('not_found');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/NON-EXISTENT",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"NON-EXISTENT"
+							]
+						},
+						"description": "Try to delete a product that doesn't exist"
+					},
+					"response": []
+				}
+			],
+			"description": "Test product deletion and cleanup operations"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global setup - ensure base_url is set",
+					"if (!pm.globals.has('base_url')) {",
+					"    pm.globals.set('base_url', 'http://localhost:8080');",
+					"}",
+					"",
+					"// Set test_product_id if not already set",
+					"if (!pm.globals.has('test_product_id')) {",
+					"    pm.globals.set('test_product_id', 'TEST-001');",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test - ensure response is JSON when expected",
+					"if (pm.response.headers.get('Content-Type') && pm.response.headers.get('Content-Type').includes('application/json')) {",
+					"    pm.test('Response is valid JSON', function () {",
+					"        pm.response.to.be.json;",
+					"    });",
+					"}",
+					"",
+					"// Log response time for performance monitoring",
+					"console.log(`Request: ${pm.request.method} ${pm.request.url} - Response Time: ${pm.response.responseTime}ms`);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "test_product_id",
+			"value": "TEST-001",
+			"type": "string"
+		}
+	]
+}
