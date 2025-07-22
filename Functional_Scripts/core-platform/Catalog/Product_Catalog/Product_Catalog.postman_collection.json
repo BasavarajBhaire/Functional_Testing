@@ -44,7 +44,7 @@
 									"// Store product ID for later tests",
 									"if (pm.response.code === 201) {",
 									"    var jsonData = pm.response.json();",
-									"    pm.environment.set(\"product_id\", jsonData.data.id);",
+									"    pm.environment.set(\"product\", jsonData.data.id);",
 									"    pm.environment.set(\"product_sku\", jsonData.data.sku);",
 									"}"
 								],
